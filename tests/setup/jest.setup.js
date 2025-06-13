@@ -65,32 +65,11 @@ expect.extend({
   }
 });
 
+// Load test configuration from secure config file
+const testConfig = require('../config/test-config');
+
 // Global test configuration
-global.testConfig = {
-  // Exchange names used in tests
-  exchanges: ['bitFlyer', 'Coincheck', 'Zaif', 'GMOコイン', 'bitbank', 'BITPoint'],
-  
-  // Test data ranges
-  priceRange: {
-    min: 1000000,  // 1M JPY
-    max: 10000000  // 10M JPY
-  },
-  
-  // Test timeouts
-  timeouts: {
-    api: 5000,
-    websocket: 10000,
-    database: 3000
-  },
-  
-  // Performance thresholds
-  performance: {
-    apiResponseTime: 1000,     // 1 second
-    wsConnectionTime: 1000,    // 1 second
-    dbQueryTime: 500,          // 500ms
-    memoryLimit: 50 * 1024 * 1024  // 50MB
-  }
-};
+global.testConfig = testConfig;
 
 // Mock console methods to reduce noise during testing
 const originalConsoleError = console.error;
@@ -136,14 +115,26 @@ afterEach(() => {
 
 // Utility functions for tests
 global.testUtils = {
-  // Generate mock price data
-  generateMockPriceData: (exchange = 'TestExchange', basePrice = 5000000) => ({
-    exchange,
-    price: basePrice + Math.random() * 100000,
-    bid: basePrice - 1000 + Math.random() * 500,
-    ask: basePrice + 1000 + Math.random() * 500,
-    timestamp: new Date().toISOString()
-  }),
+  // Generate mock price data with validation
+  generateMockPriceData: (exchange = 'TestExchange', basePrice) => {
+    const config = global.testConfig;
+    const safeName = config.security.validation.allowedCharacters.test(exchange) ? exchange : 'TestExchange';
+    const safeBasePrice = basePrice || (config.priceRange.min + Math.random() * (config.priceRange.max - config.priceRange.min));
+    
+    // Validate price range
+    if (safeBasePrice < config.security.validation.minPriceValue || safeBasePrice > config.security.validation.maxPriceValue) {
+      throw new Error(`Invalid price range: ${safeBasePrice}`);
+    }
+    
+    const spread = config.priceRange.spread;
+    return {
+      exchange: safeName,
+      price: Math.round(safeBasePrice),
+      bid: Math.round(safeBasePrice - spread + Math.random() * (spread / 2)),
+      ask: Math.round(safeBasePrice + spread + Math.random() * (spread / 2)),
+      timestamp: new Date().toISOString()
+    };
+  },
 
   // Generate mock arbitrage opportunity
   generateMockArbitrage: (exchangeFrom = 'Exchange1', exchangeTo = 'Exchange2') => {
@@ -204,8 +195,12 @@ if (process.env.NODE_ENV === 'test') {
   process.env.SKIP_REAL_API_TESTS = process.env.SKIP_REAL_API_TESTS || 'true';
 }
 
-// Set up test database path
-process.env.TEST_DB_PATH = process.env.TEST_DB_PATH || ':memory:';
+// Set up secure test database path
+const dbConfig = global.testConfig.database;
+if (dbConfig.allowProductionAccess === false && process.env.NODE_ENV !== 'test') {
+  throw new Error('Test database access denied in non-test environment');
+}
+process.env.TEST_DB_PATH = dbConfig.path;
 
 // Increase test timeout for integration tests
 jest.setTimeout(30000);

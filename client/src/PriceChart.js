@@ -13,6 +13,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 import axios from 'axios';
+import { useAuth } from './AuthContext';
 
 ChartJS.register(
   CategoryScale,
@@ -32,6 +33,7 @@ const PriceChart = ({ prices, ws }) => {
   const [timeRange, setTimeRange] = useState(24);
   const [realtimeData, setRealtimeData] = useState({});
   const chartRef = useRef();
+  const { getToken } = useAuth();
 
   const exchangeColors = {
     'bitFlyer': '#ff6b6b',
@@ -43,7 +45,10 @@ const PriceChart = ({ prices, ws }) => {
 
   const fetchPriceHistory = async () => {
     try {
-      const response = await axios.get(`/api/price-history?hours=${timeRange}`);
+      const token = getToken();
+      const response = await axios.get(`/api/price-history?hours=${timeRange}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       const priceHistory = response.data.priceHistory;
       
       console.log(`Fetched ${priceHistory.length} records for ${timeRange} hours`);
@@ -297,7 +302,7 @@ const PriceChart = ({ prices, ws }) => {
         </div>
         <div className="control-group">
           <a 
-            href={`http://localhost:3001/api/export-csv?hours=${timeRange}`}
+            href={`${window.location.protocol}//localhost:3001/api/export-csv?hours=${timeRange}`}
             download
             className="export-button"
           >
