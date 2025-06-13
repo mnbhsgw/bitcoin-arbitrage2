@@ -35,7 +35,7 @@ This is a Bitcoin arbitrage monitoring web application with a real-time client-s
 
 ### Backend (Node.js/Express)
 - **Server entry point**: `server/index.js` - Main server with WebSocket and HTTP endpoints
-- **Exchange APIs**: `server/exchanges.js` - Fetches BTC/JPY prices from bitFlyer, Coincheck, and Zaif
+- **Exchange APIs**: `server/exchanges.js` - Fetches BTC/JPY prices from bitFlyer, Coincheck, Zaif, GMOコイン, bitbank, and BITPoint
 - **Arbitrage detection**: `server/arbitrage.js` - Detects price differences >1% between exchanges
 - **Database**: `server/database.js` - SQLite database for price history and arbitrage opportunities
 - **Real-time updates**: WebSocket broadcasting price updates every 5 seconds
@@ -47,7 +47,7 @@ This is a Bitcoin arbitrage monitoring web application with a real-time client-s
 - **Real-time UI**: WebSocket connection for live price updates and arbitrage notifications
 
 ### Key Data Flow
-1. Server fetches prices from 3 exchanges every 5 seconds
+1. Server fetches prices from 6 exchanges every 5 seconds
 2. ArbitrageDetector analyzes price differences (threshold: 1%)
 3. Database stores all prices and detected opportunities
 4. WebSocket broadcasts updates to connected React clients
