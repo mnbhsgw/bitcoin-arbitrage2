@@ -1,0 +1,434 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Error Boundary Styles */
+.error-boundary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.error-boundary-content {
+  max-width: 600px;
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.error-boundary-content h2 {
+  color: #dc3545;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.error-boundary-content p {
+  color: #6c757d;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.error-details {
+  margin: 20px 0;
+  text-align: left;
+}
+
+.error-details summary {
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.error-stack {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  font-size: 0.8rem;
+  color: #495057;
+  overflow: auto;
+  white-space: pre-wrap;
+  max-height: 200px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.error-reload-btn,
+.error-retry-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.error-reload-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.error-reload-btn:hover {
+  background-color: #0056b3;
+}
+
+.error-retry-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.error-retry-btn:hover {
+  background-color: #545b62;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 15px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 0;
+  color: #333;
+}
+
+.header h1 {
+  margin: 5px 0;
+  font-size: 1.5rem;
+}
+
+.status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.status.connected {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status.disconnected {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.price-table {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 0;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.price-table h3 {
+  margin: 0;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  font-size: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+
+.price {
+  font-weight: bold;
+  color: #28a745;
+}
+
+.price.bid {
+  color: #007bff;
+}
+
+.price.ask {
+  color: #dc3545;
+}
+
+.bid-ask-info {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 5px;
+}
+
+.opportunities {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 0;
+  overflow-y: auto;
+  max-height: none;
+}
+
+.opportunities h3 {
+  margin: 0;
+  padding: 10px 15px;
+  background-color: #ffc107;
+  color: #333;
+  font-size: 1rem;
+}
+
+.opportunity-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.opportunity-item.unprofitable {
+  background-color: #f8d7da;
+  border-left-color: #dc3545;
+}
+
+.opportunity-item:last-child {
+  border-bottom: none;
+}
+
+.opportunity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.percentage-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.percentage {
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.percentage.gross {
+  color: #6c757d;
+  font-size: 0.9em;
+}
+
+.percentage.net.profitable {
+  color: #28a745;
+  font-size: 1.1em;
+}
+
+.percentage.net.unprofitable {
+  color: #dc3545;
+  font-size: 1.1em;
+}
+
+.profit-info {
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.net-profit-info {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+
+.net-profit-info .label {
+  font-weight: bold;
+  color: #333;
+  margin-right: 8px;
+}
+
+.net-profit.profitable {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.net-profit.unprofitable {
+  color: #dc3545;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.total-fees {
+  color: #6c757d;
+  font-size: 0.9em;
+}
+
+.fee-breakdown {
+  margin-top: 8px;
+  font-size: 0.8em;
+}
+
+.fee-breakdown summary {
+  cursor: pointer;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.fee-breakdown summary:hover {
+  text-decoration: underline;
+}
+
+.fee-details {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+
+.fee-details div {
+  margin-bottom: 4px;
+  color: #666;
+}
+
+.no-opportunities {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.last-update {
+  text-align: center;
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0;
+  padding: 10px;
+}
+
+.chart-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 0;
+  overflow: hidden;
+  height: 350px;
+}
+
+.chart-section h3 {
+  margin: 0;
+  padding: 10px 15px;
+  background-color: #28a745;
+  color: white;
+  font-size: 1rem;
+}
+
+.price-chart {
+  padding: 15px;
+  height: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-controls {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-button {
+  background-color: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-button:hover {
+  background-color: #0056b3;
+  text-decoration: none;
+  color: white;
+}
+
+.chart-controls label {
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-controls select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+}
+
+.chart-controls select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.chart-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
