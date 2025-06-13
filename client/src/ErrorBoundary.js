@@ -27,14 +27,16 @@ class ErrorBoundary extends React.Component {
             <h2>⚠️ アプリケーションエラーが発生しました</h2>
             <p>申し訳ございませんが、予期しないエラーが発生しました。</p>
             
-            <details className="error-details">
-              <summary>エラー詳細 (開発者向け)</summary>
-              <pre className="error-stack">
-                {this.state.error && this.state.error.toString()}
-                <br />
-                {this.state.errorInfo.componentStack}
-              </pre>
-            </details>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="error-details">
+                <summary>エラー詳細 (開発者向け)</summary>
+                <pre className="error-stack">
+                  {this.state.error && this.state.error.toString()}
+                  <br />
+                  {this.state.errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
             
             <div className="error-actions">
               <button 

@@ -48,13 +48,16 @@ module.exports = {
   // Transform configuration (if needed for ES modules)
   transform: {},
   
-  // Coverage thresholds - simplified to only global thresholds
+  // Coverage thresholds - increased to industry standards for security
   coverageThreshold: {
     global: {
-      branches: 39,
-      functions: 68,
-      lines: 68,
-      statements: 63
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85
     }
-  }
+  },
+  
+  // Environment setup
+  setupFiles: ['<rootDir>/tests/setup/test-env.js']
 };

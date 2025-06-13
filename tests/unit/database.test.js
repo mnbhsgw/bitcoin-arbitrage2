@@ -66,6 +66,135 @@ describe('Database', () => {
         expect.stringContaining('CREATE TABLE IF NOT EXISTS arbitrage_opportunities')
       );
     });
+
+    it('should handle table info query errors', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      // Mock table info to return error
+      mockDb.all.mockImplementation((query, callback) => {
+        if (query.includes('PRAGMA table_info')) {
+          callback(new Error('Table info error'));
+        }
+      });
+      
+      database.init();
+      
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error checking table info:', expect.any(Error));
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should add missing columns to price_history table', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      // Mock table info to return columns without bid/ask
+      mockDb.all.mockImplementation((query, callback) => {
+        if (query.includes('PRAGMA table_info(price_history)')) {
+          callback(null, [
+            { name: 'id' },
+            { name: 'exchange' },
+            { name: 'price' },
+            { name: 'timestamp' },
+            { name: 'created_at' }
+          ]);
+        }
+      });
+      
+      // Mock successful ALTER TABLE
+      mockDb.run.mockImplementation((query, callback) => {
+        if (query.includes('ALTER TABLE') && callback) {
+          callback();
+        }
+      });
+      
+      database.init();
+      
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE price_history ADD COLUMN bid REAL', expect.any(Function));
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE price_history ADD COLUMN ask REAL', expect.any(Function));
+      expect(consoleLogSpy).toHaveBeenCalledWith('Added bid column to price_history table');
+      expect(consoleLogSpy).toHaveBeenCalledWith('Added ask column to price_history table');
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle ALTER TABLE errors', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      // Mock table info to return columns without bid/ask
+      mockDb.all.mockImplementation((query, callback) => {
+        if (query.includes('PRAGMA table_info(price_history)')) {
+          callback(null, [
+            { name: 'id' },
+            { name: 'exchange' },
+            { name: 'price' },
+            { name: 'timestamp' }
+          ]);
+        }
+      });
+      
+      // Mock ALTER TABLE to return error
+      mockDb.run.mockImplementation((query, callback) => {
+        if (query.includes('ALTER TABLE') && callback) {
+          callback(new Error('ALTER TABLE error'));
+        }
+      });
+      
+      database.init();
+      
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error adding bid column:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error adding ask column:', expect.any(Error));
+      
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should add missing columns to arbitrage_opportunities table', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      
+      // Mock table info to return columns without fee-related columns
+      mockDb.all.mockImplementation((query, callback) => {
+        if (query.includes('PRAGMA table_info(arbitrage_opportunities)')) {
+          callback(null, [
+            { name: 'id' },
+            { name: 'exchange_from' },
+            { name: 'exchange_to' },
+            { name: 'price_difference' }
+          ]);
+        }
+      });
+      
+      // Mock successful ALTER TABLE
+      mockDb.run.mockImplementation((query, callback) => {
+        if (query.includes('ALTER TABLE') && callback) {
+          callback();
+        }
+      });
+      
+      database.init();
+      
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE arbitrage_opportunities ADD COLUMN net_profit REAL', expect.any(Function));
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE arbitrage_opportunities ADD COLUMN net_profit_percentage REAL', expect.any(Function));
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE arbitrage_opportunities ADD COLUMN total_fees REAL', expect.any(Function));
+      expect(mockDb.run).toHaveBeenCalledWith('ALTER TABLE arbitrage_opportunities ADD COLUMN is_profitable_after_fees BOOLEAN', expect.any(Function));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle arbitrage_opportunities table info query errors', () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      
+      // Mock table info to return error for arbitrage_opportunities
+      mockDb.all.mockImplementation((query, callback) => {
+        if (query.includes('PRAGMA table_info(arbitrage_opportunities)')) {
+          callback(new Error('Arbitrage table info error'));
+        } else if (query.includes('PRAGMA table_info(price_history)')) {
+          callback(null, [{ name: 'bid' }, { name: 'ask' }]); // Already has columns
+        }
+      });
+      
+      database.init();
+      
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error checking arbitrage_opportunities table info:', expect.any(Error));
+      consoleErrorSpy.mockRestore();
+    });
   });
 
   describe('savePrices', () => {
@@ -119,6 +248,73 @@ describe('Database', () => {
 
       expect(mockDb.run).toHaveBeenCalledWith('BEGIN TRANSACTION');
       expect(mockDb.run).toHaveBeenCalledWith('COMMIT', expect.any(Function));
+    });
+
+    it('should rollback transaction on error', async () => {
+      const mockStmt = {
+        run: jest.fn((params, callback) => {
+          callback(new Error('Insert error'));
+        }),
+        finalize: jest.fn()
+      };
+      mockDb.prepare.mockReturnValue(mockStmt);
+      mockDb.run.mockImplementation((query, callback) => {
+        if (callback) callback();
+      });
+
+      const prices = [
+        { exchange: 'Exchange1', price: 5000000, bid: 4999000, ask: 5001000, timestamp: '2023-01-01T00:00:00Z' }
+      ];
+
+      await expect(database.savePrices(prices)).rejects.toThrow('Insert error');
+      expect(mockDb.run).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('should handle finalize error', async () => {
+      const mockStmt = {
+        run: jest.fn((params, callback) => {
+          callback();
+        }),
+        finalize: jest.fn((callback) => {
+          callback(new Error('Finalize error'));
+        })
+      };
+      mockDb.prepare.mockReturnValue(mockStmt);
+      mockDb.run.mockImplementation((query, callback) => {
+        if (callback) callback();
+      });
+
+      const prices = [
+        { exchange: 'Exchange1', price: 5000000, bid: 4999000, ask: 5001000, timestamp: '2023-01-01T00:00:00Z' }
+      ];
+
+      await expect(database.savePrices(prices)).rejects.toThrow('Finalize error');
+      expect(mockDb.run).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('should handle commit error', async () => {
+      const mockStmt = {
+        run: jest.fn((params, callback) => {
+          callback();
+        }),
+        finalize: jest.fn((callback) => {
+          callback();
+        })
+      };
+      mockDb.prepare.mockReturnValue(mockStmt);
+      mockDb.run.mockImplementation((query, callback) => {
+        if (query === 'COMMIT' && callback) {
+          callback(new Error('Commit error'));
+        } else if (callback) {
+          callback();
+        }
+      });
+
+      const prices = [
+        { exchange: 'Exchange1', price: 5000000, bid: 4999000, ask: 5001000, timestamp: '2023-01-01T00:00:00Z' }
+      ];
+
+      await expect(database.savePrices(prices)).rejects.toThrow('Commit error');
     });
   });
 
@@ -280,6 +476,56 @@ describe('Database', () => {
       });
 
       await expect(database.clearAllData()).rejects.toThrow('Delete error');
+    });
+  });
+
+  describe('getPrices', () => {
+    it('should fetch all prices when no exchange specified', async () => {
+      const mockPrices = [
+        { id: 1, exchange: 'Exchange1', price: 5000000 },
+        { id: 2, exchange: 'Exchange2', price: 5100000 }
+      ];
+
+      mockDb.all.mockImplementation((query, params, callback) => {
+        callback(null, mockPrices);
+      });
+
+      const result = await database.getPrices();
+
+      expect(mockDb.all).toHaveBeenCalledWith(
+        'SELECT * FROM price_history ORDER BY created_at DESC',
+        [],
+        expect.any(Function)
+      );
+      expect(result).toEqual(mockPrices);
+    });
+
+    it('should fetch prices for specific exchange', async () => {
+      const mockPrices = [
+        { id: 1, exchange: 'Exchange1', price: 5000000 }
+      ];
+
+      mockDb.all.mockImplementation((query, params, callback) => {
+        callback(null, mockPrices);
+      });
+
+      const result = await database.getPrices('Exchange1');
+
+      expect(mockDb.all).toHaveBeenCalledWith(
+        'SELECT * FROM price_history WHERE exchange = ? ORDER BY created_at DESC',
+        ['Exchange1'],
+        expect.any(Function)
+      );
+      expect(result).toEqual(mockPrices);
+    });
+
+    it('should handle database errors in getPrices', async () => {
+      const error = new Error('Database error');
+      mockDb.all.mockImplementation((query, params, callback) => {
+        callback(error, null);
+      });
+
+      await expect(database.getPrices()).rejects.toThrow('Database error');
     });
   });
 

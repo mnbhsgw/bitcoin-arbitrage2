@@ -2,16 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import PriceChart from './PriceChart';
 import ErrorBoundary from './ErrorBoundary';
+import { AuthProvider, useAuth } from './AuthContext';
+import LoginForm from './LoginForm';
 
-function App() {
+function AppContent() {
   const [prices, setPrices] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [connected, setConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [ws, setWs] = useState(null);
+  const { isAuthenticated, loading, getToken } = useAuth();
 
   const connectWebSocket = useCallback(() => {
-    const websocket = new WebSocket('ws://localhost:3001');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const websocket = new WebSocket(`${protocol}//localhost:3001`);
     
     websocket.onopen = () => {
       console.log('WebSocket connected');
@@ -46,9 +50,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchInitialData = async () => {
       try {
-        const response = await axios.get('/api/prices');
+        const token = getToken();
+        const response = await axios.get('/api/prices', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
         setPrices(response.data.prices || []);
         setOpportunities(response.data.opportunities || []);
         setLastUpdate(new Date().toLocaleString('ja-JP'));
@@ -65,7 +74,19 @@ function App() {
         ws.close();
       }
     };
-  }, [connectWebSocket]);
+  }, [connectWebSocket, isAuthenticated, getToken]);
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div>読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginForm />;
+  }
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ja-JP', {
@@ -81,8 +102,7 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <div className="container">
+    <div className="container">
       <div className="header">
         <h1>🪙 BTC アービトラージ監視システム</h1>
         <div className={`status ${connected ? 'connected' : 'disconnected'}`}>
@@ -181,8 +201,17 @@ function App() {
           最終更新: {lastUpdate}
         </div>
       )}
-      </div>
-    </ErrorBoundary>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
+    </AuthProvider>
   );
 }
 

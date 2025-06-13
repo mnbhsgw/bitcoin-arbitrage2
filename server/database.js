@@ -211,6 +211,23 @@ class Database {
     });
   }
 
+  getPrices(exchange = null) {
+    return new Promise((resolve, reject) => {
+      let query = "SELECT * FROM price_history ORDER BY created_at DESC";
+      let params = [];
+      
+      if (exchange) {
+        query = "SELECT * FROM price_history WHERE exchange = ? ORDER BY created_at DESC";
+        params = [exchange];
+      }
+      
+      this.db.all(query, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  }
+
   getPriceHistory(hours = 24) {
     return new Promise((resolve, reject) => {
       const hoursAgo = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
