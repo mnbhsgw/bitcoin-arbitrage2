@@ -179,3 +179,47 @@ WS_MAX_PAYLOAD=16384
 SQLiteデータベース（`server/arbitrage.db`）に以下を保存:
 - 価格履歴（`price_history`テーブル）
 - アービトラージ機会（`arbitrage_opportunities`テーブル）
+
+## 開発ツール
+
+### GitHub Issues 作成スクリプト
+
+プロジェクトの改善課題を自動的にGitHub Issuesとして作成するスクリプトが利用できます。
+
+#### 使用方法
+
+```bash
+# デフォルトリポジトリ（このプロジェクト）にイシューを作成
+./scripts/create_github_issues.sh
+
+# 他のリポジトリにイシューを作成
+./scripts/create_github_issues.sh owner/repository-name
+
+# 環境変数で指定
+GITHUB_REPO=owner/repository-name ./scripts/create_github_issues.sh
+```
+
+#### 前提条件
+
+- [GitHub CLI](https://cli.github.com/) がインストールされていること
+- GitHub CLI で認証済みであること (`gh auth login`)
+- 対象リポジトリへの書き込み権限があること
+
+#### 作成されるイシュー
+
+スクリプトを実行すると以下の改善課題がGitHub Issuesとして作成されます：
+
+1. **🚀 TypeScript導入による型安全性の向上**
+2. **📈 リアルタイム価格履歴グラフの強化**
+3. **🔔 アラート機能の追加**
+4. **⚙️ 設定可能な閾値システム**
+5. **🛡️ API レート制限対応の強化**
+6. **🔍 データベース最適化**
+7. **🔌 WebSocket接続安定性の向上**
+8. **📊 ログ監視機能の強化**
+9. **🔄 API バージョニング**
+10. **👥 マルチユーザー対応**
+11. **🧪 E2Eテスト強化**
+12. **⚡ パフォーマンステスト強化**
+
+各イシューには詳細な説明、実装方針、受け入れ条件が含まれているため、開発の優先順位付けと実装計画に活用できます。
